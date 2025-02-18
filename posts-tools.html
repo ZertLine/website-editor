@@ -215,46 +215,43 @@
     let animationFrameId;
 
     function captureURL() {
-      if (newWindow && newWindow.location) {
+      if (!newWindow || newWindow.closed) {
+        console.warn("New window is closed or not opened.");
+        return;
+      }
+
+      try {
         const newWindowURL = newWindow.location.href;
 
-        if (!newWindowURL) {
-          console.log("New window URL is empty.");
+        if (newWindowURL === "about:blank") {
+          console.log("Waiting for Dropbox to load...");
+          animationFrameId = requestAnimationFrame(captureURL);
           return;
         }
 
-        console.log('URL of the new window:', newWindowURL);
+        console.log("Final Redirect URL:", newWindowURL);
 
-        callCount++;
+        if (newWindowURL.includes("#access_token=")) {
+          const url = new URL(newWindowURL);
+          const hash = url.hash;
+          accessToken = hash.split('=')[1].split('&')[0];
 
-        if (callCount >= maxCallCount) {
-          try {
-            const url = new URL(newWindowURL);
-            console.log(url);
+          console.log("Access Token:", accessToken);
+          newWindow.close();
+          cancelAnimationFrame(animationFrameId);
 
-            if (url.hash) {
-              const hash = url.hash;
-              accessToken = hash.split('=')[1].split('&')[0];
-              console.log("Access Token:", accessToken);
-
-              newWindow.close();
-              cancelAnimationFrame(animationFrameId);
-
-              document.getElementById("tokenstat").innerHTML = "All good, now edit!";
-              document.getElementById("tokenstat").style.color = "green";
-            } else {
-              console.error("URL hash is missing, cannot extract access token.");
-            }
-          } catch (error) {
-            console.error("Error parsing URL:", error);
-          }
+          document.getElementById("tokenstat").innerHTML = "All good, now edit!";
+          document.getElementById("tokenstat").style.color = "green";
         } else {
-          animationFrameId = requestAnimationFrame(captureURL);
+          console.error("Access token not found in URL.");
         }
-      } else {
-        console.warn("New window not opened or popup blocked.");
+      } catch (error) {
+        console.error("Error accessing new window URL:", error);
       }
+
+      animationFrameId = requestAnimationFrame(captureURL);
     }
+
 
     document.getElementById("generateTokenLink").addEventListener("click", () => {
       const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}`;
