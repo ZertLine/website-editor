@@ -191,14 +191,15 @@
   <script>
     function closeTab() {
       const currentURL = window.location.href;
+      console.log("Current URL:", currentURL);
 
-      console.log(currentURL);
+      if (!currentURL.includes("https://zertline.github.io/website-editor/news-tools.html")) {
+        console.log("Closing tab...");
 
-      if (
-        currentURL !=
-        "https://zertline.github.io/website-editor/posts-tools.html"
-      ) {
+        window.open('', '_self');
         window.close();
+      } else {
+        console.log("Tab remains open.");
       }
     }
 
