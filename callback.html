@@ -20,7 +20,9 @@
         const accessToken = params.get("access_token");
 
         if (accessToken) {
+            const expirationTime = Date.now() + expiresIn * 1000;
             localStorage.setItem("dropbox_token", accessToken);
+            localStorage.setItem("dropbox_token_expiry", expirationTime);
 
             window.close();
         }

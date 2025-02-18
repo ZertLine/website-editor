@@ -149,6 +149,35 @@
 
             let accessToken;
 
+            function isDropboxTokenValid() {
+                const expirationTime = localStorage.getItem("dropbox_token_expiry");
+                if (!expirationTime) return false;
+
+                return Date.now() < parseInt(expirationTime, 10);
+            }
+
+            function getStoredDropboxToken() {
+                if (isDropboxTokenValid()) {
+                    return localStorage.getItem("dropbox_token");
+                } else {
+                    console.log("Dropbox token expired. User must log in again.");
+                    return null;
+                }
+            }
+
+            function checkDropboxToken() {
+                const token = getStoredDropboxToken();
+
+                if (token) {
+                    accessToken = token;
+                    document.getElementById('tokenstat').innerHTML = "Ready";
+                    document.getElementById('tokenstat').style.color = "green";
+                    console.log("Using stored Dropbox token:", token);
+                } else {
+                    console.log("No valid token found. Redirecting to login...");
+                }
+            }
+
             function openDropboxLogin() {
                 const CLIENT_ID = "hs2pnr348r68qex";
                 const REDIRECT_URI = "https://zertline.github.io/website-editor/callback.html";
@@ -161,17 +190,9 @@
                     if (newTab.closed) {
                         clearInterval(checkInterval);
                         console.log("Popup closed");
+                        checkDropboxToken();
                     }
                 }, 1000);
-            }
-
-            function checkDropboxToken() {
-                const token = localStorage.getItem("dropbox_token");
-
-                if (token) {
-                    accessToken = token;
-                    console.log("Access Token:", token);
-                }
             }
 
             window.onload = checkDropboxToken;
