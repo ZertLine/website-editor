@@ -18,6 +18,7 @@
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const accessToken = params.get("access_token");
+        const expiresIn = 14400;
 
         if (accessToken) {
             const expirationTime = Date.now() + expiresIn * 1000;

@@ -151,6 +151,7 @@
 
             function isDropboxTokenValid() {
                 const expirationTime = localStorage.getItem("dropbox_token_expiry");
+                console.log(expirationTime);
                 if (!expirationTime) return false;
 
                 return Date.now() < parseInt(expirationTime, 10);
