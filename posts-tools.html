@@ -189,78 +189,37 @@
     <button type="button" id="undo-action-post-part" style="display: none;">Undo action on post part</button>
   </div>
   <script>
-    function closeTab() {
-      const currentURL = window.location.href;
-      console.log("Current URL:", currentURL);
-
-      if (!currentURL.includes("https://zertline.github.io/website-editor/news-tools.html")) {
-        console.log("Closing tab...");
-
-        window.open('', '_self');
-        window.close();
-      } else {
-        console.log("Tab remains open.");
-      }
-    }
-
-    window.addEventListener("load", closeTab);
-
-    const clientId = "hs2pnr348r68qex";
-    const redirectUri = "https://zertline.github.io/website-editor/posts-tools.html";
-    let newWindow;
     let accessToken;
-    let sharedLink;
 
-    let callCount = 0;
-    const maxCallCount = 10;
-    let animationFrameId;
+    function openDropboxLogin() {
+      const CLIENT_ID = "hs2pnr348r68qex";
+      const REDIRECT_URI = "https://zertline.github.io/website-editor/callback.html";
 
-    function captureURL() {
-      if (!newWindow || newWindow.closed) {
-        console.warn("New window is closed or not opened.");
-        return;
-      }
+      const authUrl = `https://www.dropbox.com/oauth2/authorize?response_type=token&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
 
-      try {
-        const newWindowURL = newWindow.location.href;
+      const newTab = window.open(authUrl, "_blank");
 
-        if (newWindowURL === "about:blank") {
-          console.log("Waiting for Dropbox to load...");
-          animationFrameId = requestAnimationFrame(captureURL);
-          return;
+      const checkInterval = setInterval(() => {
+        if (newTab.closed) {
+          clearInterval(checkInterval);
+          console.log("Popup closed");
         }
-
-        console.log("Final Redirect URL:", newWindowURL);
-
-        if (newWindowURL.includes("#access_token=")) {
-          const url = new URL(newWindowURL);
-          const hash = url.hash;
-          accessToken = hash.split('=')[1].split('&')[0];
-
-          console.log("Access Token:", accessToken);
-          newWindow.close();
-          cancelAnimationFrame(animationFrameId);
-
-          document.getElementById("tokenstat").innerHTML = "All good, now edit!";
-          document.getElementById("tokenstat").style.color = "green";
-        } else {
-          console.error("Access token not found in URL.");
-        }
-      } catch (error) {
-        console.error("Error accessing new window URL:", error);
-      }
-
-      animationFrameId = requestAnimationFrame(captureURL);
+      }, 1000);
     }
 
+    function checkDropboxToken() {
+      const token = localStorage.getItem("dropbox_token");
 
-    document.getElementById("generateTokenLink").addEventListener("click", () => {
-      const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}`;
-      newWindow = window.open(authUrl, "_blank");
-      if (!newWindow) {
-        alert("Please allow pop-ups to proceed.");
+      if (token) {
+        accessToken = token;
+        console.log("Access Token:", token);
       }
-      animationFrameId = requestAnimationFrame(captureURL);
+    }
+
+    window.onload = checkDropboxToken;
+
+    document.getElementById('generateTokenLink').addEventListener('click', () => {
+      openDropboxLogin()
     });
 
     let postElement = [];
