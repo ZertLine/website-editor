@@ -151,7 +151,6 @@
 
             function isDropboxTokenValid() {
                 const expirationTime = localStorage.getItem("dropbox_token_expiry");
-                console.log(expirationTime);
                 if (!expirationTime) return false;
 
                 return Date.now() < parseInt(expirationTime, 10);
@@ -161,7 +160,8 @@
                 if (isDropboxTokenValid()) {
                     return localStorage.getItem("dropbox_token");
                 } else {
-                    console.log("Dropbox token expired. User must log in again.");
+                    console.log("Dropbox token expired. Attempting to get a new one...");
+                    openDropboxLogin();
                     return null;
                 }
             }
@@ -174,6 +174,8 @@
                     document.getElementById('tokenstat').innerHTML = "Ready";
                     document.getElementById('tokenstat').style.color = "green";
                     console.log("Using stored Dropbox token:", token);
+
+                    scheduleTokenRefresh();
                 } else {
                     console.log("No valid token found. Redirecting to login...");
                 }
@@ -191,16 +193,33 @@
                     if (newTab.closed) {
                         clearInterval(checkInterval);
                         console.log("Popup closed");
-                        checkDropboxToken();
+
+                        const token = localStorage.getItem("dropbox_token");
+
+                        accessToken = token;
+                        document.getElementById('tokenstat').innerHTML = "Ready";
+                        document.getElementById('tokenstat').style.color = "green";
+                        console.log("Using stored Dropbox token:", token);
+
+                        scheduleTokenRefresh();
                     }
                 }, 1000);
             }
 
-            window.onload = checkDropboxToken;
+            function scheduleTokenRefresh() {
+                const expirationTime = parseInt(localStorage.getItem("dropbox_token_expiry"), 10);
+                const timeLeft = expirationTime - Date.now();
 
-            document.getElementById('generateTokenLink').addEventListener('click', () => {
-                openDropboxLogin()
-            });
+                if (timeLeft > 0) {
+                    console.log(`Token will refresh in ${Math.floor(timeLeft / 60000)} minutes.`);
+                    setTimeout(() => {
+                        console.log("Refreshing Dropbox token...");
+                        openDropboxLogin();
+                    }, timeLeft - 60000);
+                }
+            }
+
+            window.onload = checkDropboxToken;
 
             document.getElementById('showRemoveTool').addEventListener('click', () => {
                 document.getElementById('showRemoveTool').style.display = 'none';

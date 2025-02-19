@@ -25,6 +25,8 @@
             localStorage.setItem("dropbox_token", accessToken);
             localStorage.setItem("dropbox_token_expiry", expirationTime);
 
+            console.log("New token received and stored.");
+
             window.close();
         }
     };
